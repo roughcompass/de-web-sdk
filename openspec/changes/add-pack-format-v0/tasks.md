@@ -130,10 +130,10 @@
 
 ## 14. Salt wrapper prototype
 
-- [ ] 14.1 Build Salt's knowledge and CLI packages locally from the `ai-platform` branch; verify their Skill, guides, and `salt-ds` commands work offline
-- [ ] 14.2 Write the wrapper pack with peer dependencies on both packages; verify `validate` passes with no Salt content inside the wrapper
-- [ ] 14.3 Wrap Salt's analyzer in an adapter that returns its SARIF; verify a fixture with a deprecated Salt API produces a violation
-- [ ] 14.4 Run `sync` in a fixture app that uses Salt; verify Salt's Skill is served once from its package, the guides are pointed to, and the commands are listed
+- [x] 14.1 Build Salt's knowledge and CLI packages locally from the `ai-platform` branch; verify their Skill, guides, and `salt-ds` commands work offline
+- [x] 14.2 Write the wrapper pack with peer dependencies on both packages; verify `validate` passes with no Salt content inside the wrapper
+- [x] 14.3 Wrap Salt's analyzer in an adapter that returns its findings as SARIF results; verify a fixture with a deprecated Salt API produces a violation
+- [x] 14.4 Run `sync` in a fixture app that uses Salt; verify Salt's Skill is served once from its package, the guides are pointed to, and the commands are listed
 - [ ] 14.5 Share the prototype and its eval results with the Salt team; verify their decision on generating a manifest is recorded in D20
 
 ## 15. Pilots

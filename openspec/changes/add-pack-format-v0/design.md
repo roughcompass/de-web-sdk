@@ -372,13 +372,21 @@ The format decisions above keep the projection cheap for Salt:
 | npm provenance on both packages | Provenance verification, with no SDK signing step (D5) |
 | A packaged Agent Skill and generated guides | Skills and docs referenced in place (D3, D12) |
 | The `salt-ds` CLI | Declared agent commands (D3, D8) |
-| An analyzer that renders SARIF | The SARIF adapter contract (D4) |
+| An analyzer with a public analysis API, `analyzeSaltCode` | A check adapter that converts its findings to SARIF results (D4) |
 | Exact-version compatibility | Conditions on exact installed versions (D11) |
 | Exit codes 0 to 3 | The same exit codes (D8) |
 | `sha256:<hex>` digests | The same digest form (D3) |
 | An evaluation protocol with blind review and strict retries | Blind review, retry rules, and fixture checks (D4, D17) |
 
 Salt's analyzer, retrieval, and compatibility logic stay Salt's. The SDK doesn't reimplement Salt's lockfile resolver or search.
+
+The prototype, task 14, built Salt's `ai-platform` branch at commit `237a380` on 2026-09-28. It lives in a local repo, `de-web-sdk-salt-prototype`, and found the following:
+
+- Salt removed its SARIF renderer in its plan 033. The wrapper's adapter converts `analyzeSaltCode` findings into SARIF results.
+- `salt-ds doctor` runs the analyzer in worker threads, which adapters can't start. The adapter calls Salt's public functions in sequence: `loadKnowledgeRuntimeContext`, `inspectSaltProjectFacts`, `decideSaltProject`, then `analyzeSaltCode`.
+- Salt's inspection refuses symlinks that leave the repo and hard-linked files. Trial worktrees therefore clone the starting state's packages (D17).
+- Salt's unreleased build has no npm provenance, so the prototype pins it by integrity (D5). Salt's release, with `provenance: true`, would need no pin.
+- Salt's build needed three local fixes, which go to the Salt team with task 14.5.
 
 *Rejected:* a separate design kit pack that restates Salt's guidance. It would drift from Salt's canonical source on every release, which is the duplication Salt's own architecture forbids.
 
