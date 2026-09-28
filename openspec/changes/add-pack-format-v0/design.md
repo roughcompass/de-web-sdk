@@ -122,6 +122,10 @@ The enterprise trust policy is a signed package that maps producer scopes to pro
 
 npm serves provenance attestations from the registry, not inside the package. `sync` therefore fetches each version's attestation once, while the registry is reachable, and caches it in `.de-web-sdk/cache/`, which git ignores. Verification then runs offline against the Sigstore trusted root. The SDK ships Sigstore's public trusted root, and the enterprise trust policy can carry a newer one. The attestation names the tarball's SHA-512 digest, which the SDK compares with the integrity in the repo's lockfile. Yarn Berry's lockfile records no such digest, so for Yarn Berry the SDK matches the package name and version and warns.
 
+Some packages can't carry either proof: a build that an enterprise vendors or proxies without attestations, or a producer's unreleased build. A pack can sign its own manifest, but an ordinary package that a pack references has no manifest to sign. So a trust policy scope can also pin exact versions by tarball integrity, `"integrity": { "@salt-ds/knowledge@0.0.0": "sha512-..." }`. The SDK accepts that version only when the lockfile records the same integrity, and the package manager checked it at install. The Salt prototype found this gap, because Salt's unreleased build has no provenance yet.
+
+*Rejected:* signing a referenced package's tarball digest with the enterprise's key. It needs a signature file shipped beside the package, and a pin in the signed enterprise policy gives the same assurance.
+
 *Rejected:* a custom signature format. The first draft signed a canonical manifest with a bespoke detached signature. Sigstore bundles do the same job, and tools outside the SDK can verify them.
 
 *Rejected:* per-repo key lists only. Every repo would copy keys by hand, and rotating one key would touch every repo.
@@ -426,7 +430,7 @@ Nothing is sent until the developer, or an agent acting for them, approves the d
 - [Agent tools may move or rename instruction files] → Entry points are thin, and one task per tool rechecks the locations.
 - [Some developers run Claude Code older than 2.1.277, or a Copilot surface that ignores AGENTS.md] → A CLAUDE.md that holds `@AGENTS.md` covers older Claude Code, and task 1.2 decides whether to add `.github/copilot-instructions.md`.
 - [Salt's unreleased tooling changes before release] → The wrapper uses only paths and commands that Salt's docs name, and the prototype reruns on each Salt candidate.
-- [Artifactory drops provenance attestations for proxied public packages] → Task 1.8 checks. If it does, the enterprise mirrors the attestations or signs the proxied packages with its own key.
+- [Artifactory drops provenance attestations for proxied public packages] → Task 1.8 checks. If it does, the enterprise mirrors the attestations, or pins the approved versions by integrity in its trust policy.
 - [Eval results are noisy] → The gate uses Fisher's exact test with a minimum trial count. Owners can record an override.
 - [Evals across models cost too much] → No-pack and published results are reused, evals run only when pack content changes, and the profile sets trial counts.
 - [Import checks miss APIs used through configuration] → Tasks add script graders for those APIs. The API adoption rate covers only tasks that declare expected APIs.

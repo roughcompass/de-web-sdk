@@ -143,6 +143,32 @@ describe("trust policy and collection", () => {
     assert.match(d.message, /@salt-ds\/knowledge, referenced by @example-platform\/salt-pack/);
   });
 
+  it("accepts a referenced package that the policy pins by the lockfile's integrity, and refuses a mismatch", async () => {
+    const keys = makeKeys();
+    const pinned = "sha512-" + "A".repeat(86) + "==";
+    for (const [lockIntegrity, ok] of [[pinned, true], ["sha512-" + "B".repeat(86) + "==", false]] as const) {
+      const repo = makeRepo({ devDependencies: { "@example-platform/salt-pack": "1.0.0", "@salt-ds/knowledge": "1.0.0" }, trust: { scopes: { "@example-platform": { keys: [keys.encoded] }, "@salt-ds": { integrity: { "@salt-ds/knowledge@1.0.0": pinned } } } } });
+      write(repo, "package-lock.json", { lockfileVersion: 3, packages: { "": { name: "app" }, "node_modules/@salt-ds/knowledge": { version: "1.0.0", integrity: lockIntegrity } } });
+      // Salt's package isn't a pack: a plain package whose skill a wrapper points to.
+      write(repo, "node_modules/@salt-ds/knowledge/package.json", { name: "@salt-ds/knowledge", version: "1.0.0" });
+      write(repo, "node_modules/@salt-ds/knowledge/skills/salt-design-system/SKILL.md", "---\nname: salt-design-system\ndescription: Salt.\n---\n");
+      await installPack(repo, {
+        name: "@example-platform/salt-pack",
+        keys,
+        peerDependencies: { "@salt-ds/knowledge": "^1.0.0" },
+        manifest: { skills: [{ name: "salt-design-system", from: "@salt-ds/knowledge", path: "skills/salt-design-system" }] },
+      });
+      const c = await collectPacks({ root: repo, policy: loadTrustPolicy(repo, []), network: false });
+      if (ok) assert.deepEqual(c.trustErrors, []);
+      else assert.match(c.trustErrors.find((x) => x.code === "trust.integrity")!.message, /pins @salt-ds\/knowledge@1\.0\.0 by integrity, but the lockfile's integrity doesn't match the pinned one/);
+    }
+  });
+
+  it("rejects an integrity pin for a package outside its scope", () => {
+    const repo = makeRepo({ trust: { scopes: { "@salt-ds": { integrity: { "@other/pkg@1.0.0": "sha512-x" } } } } });
+    assert.throws(() => loadTrustPolicy(repo, []), (e: SdkError) => e.diagnostics.some((d) => d.code === "trust.integrity"));
+  });
+
   it("rejects hidden characters in referenced files", async () => {
     const keys = makeKeys();
     const repo = makeRepo({ devDependencies: { "@example-platform/runtime": "1.0.0" }, trust: trustFor("@example-platform", keys) });

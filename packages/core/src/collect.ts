@@ -33,7 +33,7 @@ export interface CollectedPack {
   version?: string;
   via: "direct" | "embedded" | "dependency" | "local";
   requiredBy?: string;
-  provenance?: { method: "signature" | "npm-provenance"; identity?: string };
+  provenance?: { method: "signature" | "npm-provenance" | "pinned-integrity"; identity?: string };
   delivered: DeliveredFile[];
 }
 

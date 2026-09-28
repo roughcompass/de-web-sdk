@@ -21,6 +21,8 @@ export const POLICY_SIGNATURE_FILE = "trust-policy.sigstore.json";
 export interface ScopeTrust {
   keys: KeyObject[];
   provenance: ProvenanceIdentity[];
+  /** Exact package versions the policy approves by tarball integrity, keyed `name@version`. */
+  integrity: Map<string, string>;
 }
 
 export interface TrustPolicy {
@@ -34,6 +36,7 @@ export interface TrustPolicy {
 interface RawScope {
   keys?: unknown;
   provenance?: unknown;
+  integrity?: unknown;
 }
 
 function parseScopes(raw: unknown, file: string, diagnostics: Diagnostic[]): Map<string, ScopeTrust> {
@@ -44,7 +47,7 @@ function parseScopes(raw: unknown, file: string, diagnostics: Diagnostic[]): Map
     return scopes;
   }
   for (const [scope, value] of Object.entries(raw as Record<string, RawScope>)) {
-    const entry: ScopeTrust = { keys: [], provenance: [] };
+    const entry: ScopeTrust = { keys: [], provenance: [], integrity: new Map() };
     if (!/^@[a-z0-9][a-z0-9._~-]*$/.test(scope)) {
       diagnostics.push(error("trust.scope", `${JSON.stringify(scope)} isn't an npm scope`, { file, field: `scopes.${scope}` }));
       continue;
@@ -75,6 +78,21 @@ function parseScopes(raw: unknown, file: string, diagnostics: Diagnostic[]): Map
         });
       }
     }
+    if (value?.integrity !== undefined) {
+      if (!value.integrity || typeof value.integrity !== "object" || Array.isArray(value.integrity)) {
+        diagnostics.push(error("trust.integrity", `scopes.${scope}.integrity must map name@version to a sha512 integrity`, { file, field: `scopes.${scope}.integrity` }));
+      } else {
+        for (const [spec, integrity] of Object.entries(value.integrity as Record<string, unknown>)) {
+          const at = spec.lastIndexOf("@");
+          const name = at > 0 ? spec.slice(0, at) : "";
+          if (!name.startsWith(`${scope}/`) || !spec.slice(at + 1) || typeof integrity !== "string" || !integrity.startsWith("sha512-")) {
+            diagnostics.push(error("trust.integrity", `scopes.${scope}.integrity entry ${JSON.stringify(spec)} must name a ${scope} package version and a sha512 integrity`, { file, field: `scopes.${scope}.integrity` }));
+            continue;
+          }
+          entry.integrity.set(spec, integrity);
+        }
+      }
+    }
     scopes.set(scope, entry);
   }
   return scopes;
@@ -83,10 +101,11 @@ function parseScopes(raw: unknown, file: string, diagnostics: Diagnostic[]): Map
 function merge(into: Map<string, ScopeTrust>, from: Map<string, ScopeTrust>) {
   for (const [scope, entry] of from) {
     const existing = into.get(scope);
-    if (!existing) into.set(scope, { keys: [...entry.keys], provenance: [...entry.provenance] });
+    if (!existing) into.set(scope, { keys: [...entry.keys], provenance: [...entry.provenance], integrity: new Map(entry.integrity) });
     else {
       existing.keys.push(...entry.keys);
       existing.provenance.push(...entry.provenance);
+      for (const [spec, integrity] of entry.integrity) existing.integrity.set(spec, integrity);
     }
   }
 }
@@ -156,7 +175,7 @@ function loadEnterprisePolicy(root: string, name: string, rootKeys: KeyObject[])
 
 export interface ProvenanceResult {
   ok: boolean;
-  method?: "signature" | "npm-provenance";
+  method?: "signature" | "npm-provenance" | "pinned-integrity";
   identity?: string;
   diagnostics: Diagnostic[];
 }
@@ -187,6 +206,16 @@ export async function verifyProvenance(req: ProvenanceRequest): Promise<Provenan
       ok: false,
       diagnostics: [error("trust.scope", `${req.label}: its scope ${JSON.stringify(scope || "(none)")} isn't in the trust policy`, { file: TRUST_FILE })],
     };
+  }
+  // An exact version pinned by integrity, such as a build without npm provenance, is decided by the pin alone.
+  const pinned = entry.integrity.get(`${req.packageName}@${req.version}`);
+  if (pinned) {
+    const lock = readLockfile(req.root).lookup(req.packageName);
+    if (lock?.version === req.version && lock.integrity === pinned) {
+      return { ok: true, method: "pinned-integrity", identity: `integrity ${pinned.slice(0, 20)}...`, diagnostics: [] };
+    }
+    const reason = !lock?.integrity || lock.version !== req.version ? "the lockfile records no integrity for that version" : "the lockfile's integrity doesn't match the pinned one";
+    return { ok: false, diagnostics: [error("trust.integrity", `${req.label}: the trust policy pins ${req.packageName}@${req.version} by integrity, but ${reason}`, { file: TRUST_FILE })] };
   }
   const sigPath = req.packDir ? path.join(req.packDir, SIGNATURE_FILE) : undefined;
   if (sigPath && existsSync(sigPath) && entry.keys.length) {

@@ -190,7 +190,7 @@ Remove the declared fact once detection reports MF2.
 `sync` and `check` verify every pack before using it, and a failure stops them before any adapter runs or any file is written:
 
 - The pack's npm scope must be in `.de-web-sdk/trust.json`, directly or through the enterprise trust policy it extends.
-- Its provenance must come from an identity or key that the policy lists for that scope. Public packages use npm provenance, and internal packs carry a Sigstore-format signature.
+- Its provenance must come from an identity or key that the policy lists for that scope. Public packages use npm provenance, and internal packs carry a Sigstore-format signature. A package with neither, such as a vendored build, passes only at an exact version that the policy pins by its tarball's integrity.
 - Every file must match the digest in the pack's manifest.
 - No file that reaches agents may contain hidden characters.
 

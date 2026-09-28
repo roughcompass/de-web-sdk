@@ -32,7 +32,7 @@ A repo's trust policy MAY extend the enterprise trust policy, which is published
 
 ### Requirement: Provenance verification
 
-`sync` and `check` SHALL verify each published pack's provenance before using it. Accepted provenance SHALL be npm provenance from an identity that the trust policy lists for the pack's scope. A signature in the Sigstore bundle format from a listed key SHALL also count.
+`sync` and `check` SHALL verify each published pack's provenance before using it. Accepted provenance SHALL be npm provenance from an identity that the trust policy lists for the pack's scope. A signature in the Sigstore bundle format from a listed key SHALL also count. So SHALL an exact version that the trust policy pins by its tarball's integrity, when the repo's lockfile records that same integrity.
 
 #### Scenario: Public package with npm provenance
 
@@ -48,6 +48,16 @@ A repo's trust policy MAY extend the enterprise trust policy, which is published
 
 - **WHEN** a pack's provenance comes from a repository, workflow, or key that the trust policy doesn't list for its scope
 - **THEN** `sync` and `check` fail and name the pack and the identity
+
+#### Scenario: Version pinned by integrity
+
+- **WHEN** the trust policy pins a package version by integrity and the lockfile records the same integrity
+- **THEN** `sync` accepts the package without provenance or a signature
+
+#### Scenario: Pinned version with a different tarball
+
+- **WHEN** the lockfile records a different integrity for a pinned version
+- **THEN** `sync` and `check` fail and name the package
 
 #### Scenario: Adapter pack without provenance
 
