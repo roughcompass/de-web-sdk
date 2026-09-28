@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { constants, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -93,36 +93,43 @@ async function preparePack(source: PackSource, digest: string): Promise<Prepared
   };
 }
 
-/** Links each top-level package of `from` into `into`, one symlink per package. */
-function linkModules(from: string, into: string): void {
+const exists = (p: string) => {
+  try {
+    lstatSync(p);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Recreates the starting state's node_modules in the worktree as copy-on-write
+ * clones where the file system supports them, and plain copies elsewhere.
+ * Packages are then independent files inside the worktree, as in a consumer's
+ * install. Salt's inspection refuses both symlinks that leave the repo and
+ * hard-linked files, and an agent's edits can't reach the starting state.
+ */
+function linkModules(from: string, into: string, top: string = from): void {
   if (!existsSync(from)) return;
   mkdirSync(into, { recursive: true });
-  for (const name of readdirSync(from)) {
-    if (name === ".bin" || name.startsWith(".")) continue;
-    const src = path.join(from, name);
-    if (name.startsWith("@")) {
-      for (const child of readdirSync(src)) {
-        const target = path.join(into, name, child);
-        if (existsSync(target)) continue;
-        mkdirSync(path.join(into, name), { recursive: true });
-        symlinkSync(realpathSync(path.join(src, child)), target, "junction");
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name);
+    const dst = path.join(into, entry.name);
+    if (exists(dst)) continue;
+    if (entry.isDirectory()) {
+      linkModules(src, dst, top);
+    } else if (entry.isSymbolicLink()) {
+      // Keep links within node_modules, such as .bin entries; point others at their real target.
+      const link = readlinkSync(src);
+      const target = path.resolve(path.dirname(src), link);
+      const within = target === top || target.startsWith(top + path.sep);
+      try {
+        symlinkSync(within ? link : realpathSync(target), dst);
+      } catch {
+        // A broken link in the starting state; whatever needs it reports the missing file.
       }
-    } else if (!existsSync(path.join(into, name))) {
-      symlinkSync(realpathSync(src), path.join(into, name), "junction");
-    }
-  }
-}
-
-/** Links the starting state's package binaries, such as `vite`, so the task's build can run them. */
-function linkBins(from: string, into: string): void {
-  if (!existsSync(from)) return;
-  for (const name of readdirSync(from)) {
-    const target = path.join(into, name);
-    if (existsSync(target)) continue;
-    try {
-      symlinkSync(realpathSync(path.join(from, name)), target);
-    } catch {
-      // A broken link in the starting state; the build reports the missing binary.
+    } else {
+      copyFileSync(src, dst, constants.COPYFILE_FICLONE);
     }
   }
 }
@@ -198,8 +205,7 @@ export async function createWorktree(source: PackSource, task: EvalTask, pack: P
   cpSync(start, dir, { recursive: true, filter: (src) => !src.split(path.sep).includes("node_modules") });
   linkModules(path.join(start, "node_modules"), path.join(dir, "node_modules"));
   mkdirSync(path.join(dir, "node_modules", ".bin"), { recursive: true });
-  symlinkSync(cliBin(), path.join(dir, "node_modules", ".bin", "de-web-sdk"));
-  linkBins(path.join(start, "node_modules", ".bin"), path.join(dir, "node_modules", ".bin"));
+  if (!exists(path.join(dir, "node_modules", ".bin", "de-web-sdk"))) symlinkSync(cliBin(), path.join(dir, "node_modules", ".bin", "de-web-sdk"));
   // The .mcp.json entry that sync writes starts node_modules/@de-web-sdk/cli, so trials link it in.
   const cliTarget = path.join(dir, "node_modules", "@de-web-sdk", "cli");
   if (!existsSync(cliTarget)) {
