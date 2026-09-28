@@ -1,0 +1,9 @@
+# Owners review every change. Trust, adapter isolation, and the MCP server are
+# the SDK's security boundary, so they're listed on their own as well.
+* @roughcompass
+
+/packages/core/src/trust/ @roughcompass
+/packages/core/src/runner.ts @roughcompass
+/packages/core/src/adapter-host.ts @roughcompass
+/packages/cli/src/mcp/ @roughcompass
+/SECURITY.md @roughcompass

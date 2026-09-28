@@ -97,7 +97,9 @@ describe("producer guide", () => {
     // The guide's publish command, run as written from the pack's directory.
     const publish = argv(block("sh", "npm publish").trim());
     const dryRun = execFileSync("npm", [...publish.slice(1), "--dry-run", "--json"], { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-    assert.equal(JSON.parse(dryRun).name, "@example-analytics/tracking-pack");
+    // npm 11.19 and later key the dry run's JSON by package name; earlier versions don't.
+    const parsed = JSON.parse(dryRun) as { name?: string } & Record<string, { name?: string }>;
+    assert.equal(parsed.name ?? Object.values(parsed)[0]?.name, "@example-analytics/tracking-pack");
 
     // A consumer installs the tarball, trusts the producer's key, and runs check.
     const app = makeRepo({ dependencies: { "@example-analytics/client": "^3.0.0" }, trust: { scopes: { "@example-analytics": { keys: [publicKey] } } }, files: { "src/pages/home.tsx": "export const Home = () => null;\n" } });

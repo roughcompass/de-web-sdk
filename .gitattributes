@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.tgz binary
+*.vsix binary
+package-lock.json linguist-generated=true -diff

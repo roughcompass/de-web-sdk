@@ -6,6 +6,13 @@
   "publisher": "de-web-sdk",
   "private": true,
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roughcompass/de-web-sdk.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://github.com/roughcompass/de-web-sdk/tree/main/packages/vscode#readme",
+  "bugs": "https://github.com/roughcompass/de-web-sdk/issues",
   "engines": {
     "vscode": "^1.101.0",
     "node": ">=22.13.0"
@@ -51,7 +58,7 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "package": "vsce package --no-dependencies --out dist/de-web-sdk-vscode.vsix"
+    "package": "npx --yes @vscode/vsce@4.0.0 package --no-dependencies --out dist/de-web-sdk-vscode.vsix"
   },
   "devDependencies": {
     "@types/vscode": "~1.101.0"

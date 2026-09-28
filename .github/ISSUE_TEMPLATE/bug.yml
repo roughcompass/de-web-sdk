@@ -1,0 +1,29 @@
+name: Bug report
+description: Something in the SDK behaves differently from its specs or guides.
+labels: [bug]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      placeholder: "@de-web-sdk/cli 0.1.0-alpha.0"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The commands you ran, with `--format json` output where it helps. Leave out source code and credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "macOS 26, Node.js 24.15.0, npm 11.19.1"

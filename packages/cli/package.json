@@ -4,6 +4,13 @@
   "description": "Consumer CLI: set up a repo, get the rules that apply, check conformance, and send feedback.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roughcompass/de-web-sdk.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/roughcompass/de-web-sdk/tree/main/packages/cli#readme",
+  "bugs": "https://github.com/roughcompass/de-web-sdk/issues",
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },

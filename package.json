@@ -20,5 +20,9 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roughcompass/de-web-sdk.git"
   }
 }
