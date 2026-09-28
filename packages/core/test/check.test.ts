@@ -123,6 +123,20 @@ describe("check: adapter contract and isolation", () => {
     assert.equal(run.ok && run.findings[0]!.message, "answer 42");
   });
 
+  it("lets an adapter import a symlinked package whose real location is outside the repo, as in a trial worktree", async () => {
+    const elsewhere = tmpDir("dws-linked-");
+    write(elsewhere, "linked-lib/package.json", { name: "linked-lib", version: "1.0.0", type: "module", exports: "./index.js" });
+    write(elsewhere, "linked-lib/index.js", "export const answer = 7;\n");
+    const repo = tmpDir("dws-worktree-");
+    write(repo, "a.txt", "x\n");
+    write(repo, "node_modules/adapter-pack/package.json", { name: "adapter-pack", version: "1.0.0", type: "module" });
+    write(repo, "node_modules/adapter-pack/a.mjs", 'import { answer } from "linked-lib";\nexport default ({ result }) => ({ results: [result({ file: "a.txt", fingerprint: "k", message: `answer ${answer}` })] });\n');
+    (await import("node:fs")).symlinkSync(path.join(elsewhere, "linked-lib"), path.join(repo, "node_modules/linked-lib"));
+    const run = await runAdapter({ module: path.join(repo, "node_modules/adapter-pack/a.mjs"), root: repo, rule: "p#r", facts: { bundler: "none", moduleFederation: "none", role: "none", packages: {} }, options: {}, files: ["a.txt"], timeoutMs: 20_000 });
+    assert.ok(run.ok, run.ok ? "" : run.error);
+    assert.equal(run.ok && run.findings[0]!.message, "answer 7");
+  });
+
   it("stops an adapter that exceeds its time limit", async () => {
     const s = await scenario({ rules: [machine("hang", "hang")], config: { mode: "enforce", adapterTimeoutSeconds: 1 } });
     const { result } = await check(s.root);

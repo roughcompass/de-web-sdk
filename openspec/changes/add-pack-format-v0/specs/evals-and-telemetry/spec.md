@@ -116,6 +116,16 @@ For each model, the runner SHALL run each task a configured number of times in e
 - **WHEN** a pack has a published version
 - **THEN** the report compares the candidate with both the published version and the no-pack condition
 
+#### Scenario: Dependency pack in the same workspace
+
+- **WHEN** the candidate depends on another pack that the producer's repo holds as source, such as in a workspace
+- **THEN** trials install that pack as consumers would get it, and its checks run
+
+#### Scenario: Candidate that doesn't verify
+
+- **WHEN** the candidate fails verification in a trial worktree, such as through an unsigned dependency pack
+- **THEN** the run stops before any trial starts and says why
+
 #### Scenario: Published version the producer repo doesn't trust
 
 - **WHEN** the published version fails verification under the trust policy in the producer's repo

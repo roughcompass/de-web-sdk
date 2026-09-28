@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AdapterFacts, SarifResult } from "./adapter.ts";
@@ -80,6 +80,28 @@ function moduleDirs(dir: string): string[] {
   }
 }
 
+/** Real locations of the symlinked packages in a node_modules directory. */
+function linkedPackages(modulesDir: string): string[] {
+  const out: string[] = [];
+  const scan = (dir: string, scoped: boolean) => {
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const abs = path.join(dir, entry.name);
+      if (!scoped && entry.name.startsWith("@") && entry.isDirectory()) scan(abs, true);
+      else if (entry.isSymbolicLink()) out.push(real(abs));
+    }
+  };
+  scan(modulesDir, false);
+  return out;
+}
+
+const inside = (child: string, parent: string) => child === parent || child.startsWith(parent + path.sep);
+
 /** Node.js flags for the adapter process: read access only. */
 export function permissionFlags(job: Pick<AdapterJob, "root" | "module">): string[] {
   const host = hostPath();
@@ -88,6 +110,14 @@ export function permissionFlags(job: Pick<AdapterJob, "root" | "module">): strin
   const reads = new Set(
     [job.root, path.resolve(path.dirname(host), ".."), adapterPackage, ...moduleDirs(adapterPackage), ...moduleDirs(real(adapterPackage))].flatMap((p) => [p, real(p)]),
   );
+  // Node.js checks a symlinked package at its real location, such as a trial worktree's links
+  // into the producer's repo. Allow those, and the node_modules they resolve from.
+  for (const dir of [...reads].filter((p) => path.basename(p) === "node_modules")) {
+    for (const target of linkedPackages(dir)) {
+      if ([...reads].some((allowed) => inside(target, allowed))) continue;
+      for (const p of [target, ...moduleDirs(target)]) reads.add(p);
+    }
+  }
   const inherited = process.execArgv.filter((a) => a.startsWith("--conditions") || a.startsWith("-C") || a === "--experimental-strip-types");
   return ["--permission", ...[...reads].map((p) => `--allow-fs-read=${p}`), ...inherited];
 }

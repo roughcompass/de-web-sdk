@@ -5,8 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { createPrivateKey } from "node:crypto";
 import { main as cli } from "@de-web-sdk/cli";
-import { canonicalJson, digestOf, fileDigest, formatJson, MANIFEST_FILE, SIGNATURE_FILE, walkFiles } from "@de-web-sdk/core";
-import { computeDigests, publishedFiles, type EvalTask, type PackSource } from "../source.ts";
+import { canonicalJson, digestOf, fileDigest, formatJson, MANIFEST_FILE, resolvePackageDir, SIGNATURE_FILE, walkFiles } from "@de-web-sdk/core";
+import { computeDigests, contentDigest, loadSource, publishedFiles, type EvalTask, type PackSource } from "../source.ts";
 import { generateKeys, signBytes } from "../sign.ts";
 
 const require = createRequire(import.meta.url);
@@ -20,6 +20,11 @@ export interface PreparedPack {
   digest: string;
   /** Trust policy entries that accept it. */
   trustKeys: string[];
+  /** Where its own dependencies resolve from. */
+  sourceDir?: string;
+  dependencies?: string[];
+  /** Packs it depends on that come from local source, such as a workspace, prepared the same way. */
+  localPacks?: PreparedPack[];
 }
 
 function git(cwd: string, ...args: string[]): string {
@@ -28,6 +33,40 @@ function git(cwd: string, ...args: string[]): string {
 
 /** Builds the candidate as consumers would install it, with digests, signed by an ephemeral key. */
 export async function prepareCandidate(source: PackSource, candidateDigest: string): Promise<PreparedPack> {
+  const candidate = await preparePack(source, candidateDigest);
+  candidate.localPacks = await prepareLocalDependencies(source, new Set([candidate.id]));
+  return candidate;
+}
+
+function dependencyNames(pkg: { dependencies?: Record<string, string>; peerDependencies?: Record<string, string> }): string[] {
+  return Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies });
+}
+
+/**
+ * Packs the candidate depends on that resolve to local source rather than an
+ * installed package, such as another pack in the same workspace. Their source
+ * folders hold unpublished files and no signature, so trials install them
+ * built and signed, as consumers would.
+ */
+async function prepareLocalDependencies(source: PackSource, seen: Set<string>): Promise<PreparedPack[]> {
+  const out: PreparedPack[] = [];
+  for (const dep of dependencyNames(source.packageJson)) {
+    const dir = resolvePackageDir(source.packageDir, dep);
+    if (!dir || seen.has(dep) || dir.split(path.sep).includes("node_modules")) continue;
+    let depSource: PackSource;
+    try {
+      depSource = loadSource(dir);
+    } catch {
+      continue; // A local library that isn't a pack is linked as it is.
+    }
+    seen.add(dep);
+    const prepared = await preparePack(depSource, contentDigest(depSource.manifest, computeDigests(depSource, publishedFiles(depSource))));
+    out.push(prepared, ...(await prepareLocalDependencies(depSource, seen)));
+  }
+  return out;
+}
+
+async function preparePack(source: PackSource, digest: string): Promise<PreparedPack> {
   const dir = mkdtempSync(path.join(os.tmpdir(), "dws-candidate-"));
   const packageFiles = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: source.packageDir, encoding: "utf8" });
   const listed = (JSON.parse(packageFiles) as Array<{ files: Array<{ path: string }> }>)[0]!.files.map((f) => f.path);
@@ -43,7 +82,15 @@ export async function prepareCandidate(source: PackSource, candidateDigest: stri
   writeFileSync(path.join(packDir, MANIFEST_FILE), bytes);
   const keys = generateKeys();
   writeFileSync(path.join(packDir, SIGNATURE_FILE), formatJson(await signBytes(bytes, createPrivateKey(keys.privatePem))));
-  return { id: source.packageJson.name!, version: source.packageJson.version ?? "0.0.0", dir, digest: candidateDigest, trustKeys: [keys.publicBase64] };
+  return {
+    id: source.packageJson.name!,
+    version: source.packageJson.version ?? "0.0.0",
+    dir,
+    digest,
+    trustKeys: [keys.publicBase64],
+    sourceDir: source.packageDir,
+    dependencies: dependencyNames(source.packageJson),
+  };
 }
 
 /** Links each top-level package of `from` into `into`, one symlink per package. */
@@ -80,19 +127,27 @@ function linkBins(from: string, into: string): void {
   }
 }
 
-function installPrepared(worktree: string, pack: PreparedPack, source: PackSource): void {
+function copyPrepared(worktree: string, pack: PreparedPack): void {
   const target = path.join(worktree, "node_modules", ...pack.id.split("/"));
   rmSync(target, { recursive: true, force: true });
   mkdirSync(path.dirname(target), { recursive: true });
   cpSync(pack.dir, target, { recursive: true });
-  // The pack's own dependencies, such as adapter packs, come from the producer repo.
-  const deps = { ...source.packageJson.dependencies, ...source.packageJson.peerDependencies };
-  for (const dep of Object.keys(deps)) {
-    const src = path.join(source.packageDir, "node_modules", ...dep.split("/"));
-    const dst = path.join(worktree, "node_modules", ...dep.split("/"));
-    if (existsSync(src) && !existsSync(dst)) {
-      mkdirSync(path.dirname(dst), { recursive: true });
-      symlinkSync(realpathSync(src), dst, "junction");
+}
+
+function installPrepared(worktree: string, pack: PreparedPack, source: PackSource): void {
+  const prepared = [pack, ...(pack.localPacks ?? [])];
+  for (const p of prepared) copyPrepared(worktree, p);
+  // The packs' own dependencies, such as adapter packs and libraries, come from the
+  // producer repo, found the way Node.js finds them, so hoisted and workspace installs work too.
+  for (const p of prepared) {
+    const from = p.sourceDir ?? source.packageDir;
+    for (const dep of p.dependencies ?? dependencyNames(source.packageJson)) {
+      const src = resolvePackageDir(from, dep);
+      const dst = path.join(worktree, "node_modules", ...dep.split("/"));
+      if (src && !existsSync(dst)) {
+        mkdirSync(path.dirname(dst), { recursive: true });
+        symlinkSync(src, dst, "junction");
+      }
     }
   }
   const pkgPath = path.join(worktree, "package.json");
@@ -101,9 +156,11 @@ function installPrepared(worktree: string, pack: PreparedPack, source: PackSourc
   writeFileSync(pkgPath, formatJson(pkg));
   const producerTrust = path.join(source.packageDir, ".de-web-sdk", "trust.json");
   const trust = existsSync(producerTrust) ? JSON.parse(readFileSync(producerTrust, "utf8")) : { scopes: {} };
-  const scope = pack.id.startsWith("@") ? pack.id.split("/")[0]! : "";
   trust.scopes = trust.scopes ?? {};
-  trust.scopes[scope] = { ...trust.scopes[scope], keys: [...(trust.scopes[scope]?.keys ?? []), ...pack.trustKeys] };
+  for (const p of prepared) {
+    const scope = p.id.startsWith("@") ? p.id.split("/")[0]! : "";
+    trust.scopes[scope] = { ...trust.scopes[scope], keys: [...(trust.scopes[scope]?.keys ?? []), ...p.trustKeys] };
+  }
   writeFileSync(path.join(worktree, ".de-web-sdk", "trust.json"), formatJson(trust));
 }
 

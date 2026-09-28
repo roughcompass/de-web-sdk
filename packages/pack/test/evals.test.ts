@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
-import { makeKeys, signBundle, tmpDir, write } from "../../core/test/helpers.ts";
+import { GREP_ADAPTER, makeKeys, signBundle, tmpDir, write } from "../../core/test/helpers.ts";
 import { usesExpectedApis } from "../src/evals/adoption.ts";
 import { claudeCodeDriver, allowedTools, cliUse } from "../src/evals/drivers/claude-code.ts";
 import { checkBridge, vsixName } from "../src/evals/drivers/clients.ts";
@@ -340,6 +340,43 @@ describe("eval runs end to end, with a team's own driver", () => {
     const runs = readRuns(dir);
     assert.equal(runs.length, 2);
     assert.equal(runs[1]!.trials.filter((t) => t.reusedFrom === runs[0]!.id).length, 2);
+  });
+
+  it("installs a dependency pack from local source, such as a workspace, built and signed as consumers get it", async () => {
+    const { dir, profile } = producerRepo({ runs: 1, minTrials: 1 });
+    const local = tmpDir("dws-local-adapters-");
+    write(local, "package.json", { name: "@example-platform/local-adapters", version: "1.0.0", files: ["pack.json", "pack.sigstore.json", "adapters"] });
+    write(local, "pack.json", { $schema: "https://schemas.example.com/agent-pack/v0.json", specVersion: "0", id: "@example-platform/local-adapters", version: "1.0.0", owner: { team: "P" }, feedback: "https://x/issues", adapters: [{ name: "grep", module: "adapters/grep.mjs" }] });
+    write(local, "adapters/grep.mjs", GREP_ADAPTER);
+    write(local, "test/unpublished.txt", "A source file that isn't published.\n");
+    const pkg = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
+    pkg.dependencies = { "@example-platform/local-adapters": "^1.0.0" };
+    write(dir, "package.json", pkg);
+    const manifest = JSON.parse(readFileSync(path.join(dir, "pack.json"), "utf8"));
+    manifest.rules[0].check = { pack: "@example-platform/local-adapters", adapter: "grep", options: { needle: "console.log" } };
+    write(dir, "pack.json", manifest);
+    (await import("node:fs")).mkdirSync(path.join(dir, "node_modules/@example-platform"), { recursive: true });
+    (await import("node:fs")).symlinkSync(local, path.join(dir, "node_modules/@example-platform/local-adapters"));
+    const out = await toolkit(dir, ["eval", "run", "--profile", profile, "--published", "none", "--yes"]);
+    assert.equal(out.code, 0, out.stderr);
+    const trials = readRuns(dir).at(-1)!.trials;
+    const checkOf = (condition: string) => trials.find((t) => t.condition === condition)!.graders.find((g) => g.type === "check")!;
+    assert.equal(checkOf("candidate").passed, true, checkOf("candidate").detail);
+    assert.equal(checkOf("without").detail, "check exited with 1", "the local pack's adapter ran and found the violation");
+  });
+
+  it("stops before any trial when the candidate doesn't verify in a worktree", async () => {
+    const { dir, profile } = producerRepo({ runs: 1, minTrials: 1 });
+    // An installed dependency pack with no signature that the producer's trust policy accepts.
+    write(dir, "node_modules/@example-platform/unsigned/package.json", { name: "@example-platform/unsigned", version: "1.0.0" });
+    write(dir, "node_modules/@example-platform/unsigned/pack.json", { $schema: "https://schemas.example.com/agent-pack/v0.json", specVersion: "0", id: "@example-platform/unsigned", version: "1.0.0", owner: { team: "P" }, feedback: "https://x/issues", files: {} });
+    const pkg = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
+    pkg.dependencies = { "@example-platform/unsigned": "^1.0.0" };
+    write(dir, "package.json", pkg);
+    const out = await toolkit(dir, ["eval", "run", "--profile", profile, "--published", "none", "--yes"]);
+    assert.equal(out.code, 3);
+    assert.match(out.stderr, /The candidate doesn't verify in a trial worktree, so no trial ran/);
+    assert.equal(readRuns(dir).length, 0);
   });
 
   it("runs a task's build with the starting state's package binaries, such as vite", async () => {

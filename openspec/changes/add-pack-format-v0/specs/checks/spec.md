@@ -55,6 +55,11 @@ A check adapter SHALL receive the repo root, the repo's facts, and the rule's op
 - **WHEN** a producer's fixture runs an adapter that imports a package its pack depends on
 - **THEN** the import succeeds, though the fixture sits outside the producer's `node_modules`
 
+#### Scenario: Dependency linked from elsewhere
+
+- **WHEN** an adapter imports a package that the repo links from another folder, such as a trial worktree's link into the producer's repo
+- **THEN** the import succeeds
+
 #### Scenario: Adapter exceeds the time limit
 
 - **WHEN** an adapter runs longer than the time limit

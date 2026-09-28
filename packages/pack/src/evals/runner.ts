@@ -211,6 +211,17 @@ export async function runEvals(options: RunOptions): Promise<RunRecord> {
   if (!plans.length) throw new SdkError("usage", "No model in the eval profile is reachable here");
 
   const published = preparePublished(options);
+  const candidate = await prepareCandidate(source, candidateDigest);
+  // Local dependency packs, such as another pack in the workspace, install the same way for both versions.
+  if (published) published.localPacks = candidate.localPacks;
+  if (tasks[0]) {
+    // A candidate that fails verification in a worktree would fail every trial, so check once first.
+    try {
+      removeWorktree(await createWorktree(source, tasks[0].task, candidate, options.env));
+    } catch (e) {
+      throw new SdkError("trust", `The candidate doesn't verify in a trial worktree, so no trial ran. ${(e as Error).message}`);
+    }
+  }
   if (published && tasks[0]) {
     // Trials install the published version with the pack repo's trust policy, so check it verifies before any trial runs.
     try {
@@ -266,7 +277,6 @@ export async function runEvals(options: RunOptions): Promise<RunRecord> {
     }
   }
 
-  const candidate = await prepareCandidate(source, candidateDigest);
   const runId = newRunId(now(), source.dir);
   const record: RunRecord = {
     schemaVersion: 1,
