@@ -342,6 +342,21 @@ describe("eval runs end to end, with a team's own driver", () => {
     assert.equal(runs[1]!.trials.filter((t) => t.reusedFrom === runs[0]!.id).length, 2);
   });
 
+  it("runs a task's build with the starting state's package binaries, such as vite", async () => {
+    const { dir, profile } = producerRepo({ runs: 1, minTrials: 1 });
+    const task = JSON.parse(readFileSync(path.join(dir, "evals/tasks/confirm.json"), "utf8"));
+    task.build = "fake-bundler";
+    write(dir, "evals/tasks/confirm.json", task);
+    write(dir, "evals/fixtures/app/node_modules/fake-bundler/package.json", { name: "fake-bundler", version: "1.0.0", bin: { "fake-bundler": "cli.js" } });
+    write(dir, "evals/fixtures/app/node_modules/fake-bundler/cli.js", "#!/usr/bin/env node\nrequire('node:fs').writeFileSync('built.txt', 'ok');\n");
+    (await import("node:fs")).chmodSync(path.join(dir, "evals/fixtures/app/node_modules/fake-bundler/cli.js"), 0o755);
+    (await import("node:fs")).mkdirSync(path.join(dir, "evals/fixtures/app/node_modules/.bin"), { recursive: true });
+    (await import("node:fs")).symlinkSync("../fake-bundler/cli.js", path.join(dir, "evals/fixtures/app/node_modules/.bin/fake-bundler"));
+    await toolkit(dir, ["eval", "run", "--profile", profile, "--published", "none", "--yes"]);
+    const check = readRuns(dir).at(-1)!.trials[0]!.graders.find((g) => g.type === "check")!;
+    assert.doesNotMatch(check.detail ?? "", /the build failed/, check.detail);
+  });
+
   it("runs script graders from the pack's repo and keeps a failing grader's reason", async () => {
     const { dir, profile } = producerRepo({ runs: 1, minTrials: 1 });
     const task = JSON.parse(readFileSync(path.join(dir, "evals/tasks/confirm.json"), "utf8"));

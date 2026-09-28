@@ -66,6 +66,20 @@ function linkModules(from: string, into: string): void {
   }
 }
 
+/** Links the starting state's package binaries, such as `vite`, so the task's build can run them. */
+function linkBins(from: string, into: string): void {
+  if (!existsSync(from)) return;
+  for (const name of readdirSync(from)) {
+    const target = path.join(into, name);
+    if (existsSync(target)) continue;
+    try {
+      symlinkSync(realpathSync(path.join(from, name)), target);
+    } catch {
+      // A broken link in the starting state; the build reports the missing binary.
+    }
+  }
+}
+
 function installPrepared(worktree: string, pack: PreparedPack, source: PackSource): void {
   const target = path.join(worktree, "node_modules", ...pack.id.split("/"));
   rmSync(target, { recursive: true, force: true });
@@ -128,6 +142,7 @@ export async function createWorktree(source: PackSource, task: EvalTask, pack: P
   linkModules(path.join(start, "node_modules"), path.join(dir, "node_modules"));
   mkdirSync(path.join(dir, "node_modules", ".bin"), { recursive: true });
   symlinkSync(cliBin(), path.join(dir, "node_modules", ".bin", "de-web-sdk"));
+  linkBins(path.join(start, "node_modules", ".bin"), path.join(dir, "node_modules", ".bin"));
   // The .mcp.json entry that sync writes starts node_modules/@de-web-sdk/cli, so trials link it in.
   const cliTarget = path.join(dir, "node_modules", "@de-web-sdk", "cli");
   if (!existsSync(cliTarget)) {

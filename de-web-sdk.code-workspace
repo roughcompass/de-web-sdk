@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "name": "mf2-manifest-adapter",
+      "path": "../de-web-sdk-reference/packages/mf2-manifest-adapter"
+    }
+  ],
+  "settings": {}
+}
