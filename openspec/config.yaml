@@ -1,0 +1,47 @@
+schema: spec-driven
+
+context: |
+  de-web-sdk lets organizations that set rules for client-facing web UI publish those rules as versioned packs.
+  Repos and coding agents use the SDK to apply the rules and check the result.
+  The scope is openspec/scope.md. Cite its sections instead of restating them.
+
+  Ownership: the SDK owns the pack format, composition, and delivery. Producers own rule content and the check adapters their rules use.
+  Producers are an open set. Never hardcode a list of producers.
+  This repo holds the specification and the SDK packages, never packs. Packs live in their producers' repos.
+
+  Enterprise systems confirmed on 2026-09-27:
+  - Packages, including packs, are published to JFrog Artifactory as npm packages.
+  - CI runs on a shared, platform-owned Jules pipeline. Repos opt in by committing .de-web-sdk/config.json. Confirm whether Jules is Jenkins-based before depending on Jenkins features.
+  - New remotes come from a platform-owned project template, which runs SDK setup.
+  - The first agent adapters target Claude Code and GitHub Copilot. GitHub Copilot's CLI isn't supported.
+  - Pack evals cover Claude models through Claude Code, and Copilot's model families through a reference harness. An eval profile configures enterprise-hosted models.
+  - Evals must also run locally: with Claude Code on the developer's own sign-in, or in VS Code with Copilot's models through the SDK's extension. The pipeline is never the only way, and local results count toward the gate.
+  - The VS Code extension ships as a VSIX file in Artifactory.
+  - Signing fails when a pack makes any required model worse.
+  - The pilot repo builds with Vite and Module Federation 2 (MF2). Other repos still build with webpack and Module Federation 1 (MF1).
+  - The enterprise's agent development process is unknown. Design for any process that can run shell commands.
+  - Salt is the design system. It is building its own agent tooling (@salt-ds/knowledge, @salt-ds/cli) on an unreleased branch. Wrap it; never duplicate it.
+
+  Constraint: everything must run on a package registry, git, and CI. No new central service.
+
+  Design rules that every change keeps:
+  - A repo adapts rules only through declared facts, local rules, ignored paths, and recorded exceptions. It can't turn off a pack's rule.
+  - Exceptions to locked rules need the rule owner's approval.
+  - Evals measure both task success and whether agents use the APIs a pack points to.
+  - Packs point to content in place; the SDK copies nothing from packages into repos.
+  - Provenance comes from npm provenance or Sigstore-format signatures. The package manager's lockfile pins packs; there is no SDK lock file.
+  - Check adapters return SARIF, and the format stays public and free of enterprise branding.
+  - The scope table in openspec/scope.md ranks every capability as must, should, or could. Cite it when a change adds or defers one.
+
+  Prose: follow writing-standard.md at the repo root, and run the writing-standard linter on every artifact.
+
+rules:
+  proposal:
+    - Link the openspec/scope.md section each change implements
+  specs:
+    - Describe behavior a producer, consumer, or agent can observe; keep file names and field names in design.md
+    - Treat producers as data in every requirement
+  design:
+    - Name the rejected alternative for each decision
+  tasks:
+    - Put each group's tests and docs inside that group
