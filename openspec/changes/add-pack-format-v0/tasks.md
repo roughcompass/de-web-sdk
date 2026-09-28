@@ -122,9 +122,9 @@
 ## 13. Reference repo
 
 - [ ] 13.1 Create the reference repo on the shared pipeline's producer flavor; verify `validate` runs in its pipeline
-- [ ] 13.2 Specify the MF2 manifest adapter in the reference repo's OpenSpec, starting from design.md D19; verify `openspec validate --strict` passes
+- [x] 13.2 Specify the MF2 manifest adapter in the reference repo's OpenSpec, starting from design.md D19; verify `openspec validate --strict` passes
 - [ ] 13.3 Write the adapter pack; verify it against the task 1.1 fixture and a synthetic case for each behavior in D19
-- [ ] 13.4 Write the rules pack with its four rules, fixtures, locked flags, migration skill, and eval tasks; verify `validate` reports no warnings
+- [x] 13.4 Write the rules pack with its four rules, fixtures, locked flags, migration skill, and eval tasks; verify `validate` reports no warnings
 - [ ] 13.5 Run the evals on every required model and review the disagreements; verify the gate passes or an override is recorded
 - [ ] 13.6 Publish both packs through the producer flavor; verify install and `init` in a clean fixture
 
@@ -133,7 +133,7 @@
 - [ ] 14.1 Build Salt's knowledge and CLI packages locally from the `ai-platform` branch; verify their Skill, guides, and `salt-ds` commands work offline
 - [ ] 14.2 Write the wrapper pack with peer dependencies on both packages; verify `validate` passes with no Salt content inside the wrapper
 - [ ] 14.3 Wrap Salt's analyzer in an adapter that returns its SARIF; verify a fixture with a deprecated Salt API produces a violation
-- [ ] 14.4 Run `sync` in a fixture app that uses Salt; verify the Skill is linked once, the guides are pointed to, and the commands are listed
+- [ ] 14.4 Run `sync` in a fixture app that uses Salt; verify Salt's Skill is served once from its package, the guides are pointed to, and the commands are listed
 - [ ] 14.5 Share the prototype and its eval results with the Salt team; verify their decision on generating a manifest is recorded in D20
 
 ## 15. Pilots
