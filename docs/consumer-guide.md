@@ -177,7 +177,7 @@ Through the MCP server, an agent drafts a report with `draft_feedback`, and send
 
 ## Migrate an MF1 remote
 
-In a webpack repo that still uses MF1, `init` detects webpack and MF1 without running your build configuration. Rules that apply only to MF2 repos are excluded, and `sync` lists each exclusion with its reason. The runtime pack's migration skill applies only to MF1 repos, so agents in your repo receive it. Its first step is to declare MF2, which switches the MF2 rules on:
+In a webpack repo that still uses MF1, `init` detects webpack and MF1 without running your build configuration. Rules that apply only to MF2 repos are excluded, and `sync` lists each exclusion with its reason. The runtime pack's migration skill applies only to MF1 repos, so agents in your repo receive it. Its first step adds `@module-federation/enhanced`, which the SDK detects as MF2, so the MF2 rules switch on. To switch them on before the dependency lands, declare MF2:
 
 ```json
 { "mode": "report", "facts": { "moduleFederation": "2" } }
