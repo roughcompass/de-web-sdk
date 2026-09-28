@@ -42,13 +42,18 @@ A check adapter SHALL receive the repo root, the repo's facts, and the rule's op
 
 ### Requirement: Adapter isolation
 
-`check` SHALL run each adapter in a separate process that can read the repo but cannot write files, start processes, or create worker threads. This SHALL include adapters from the local pack. Each adapter run SHALL have a time limit, 60 seconds by default.
+`check` SHALL run each adapter in a separate process that can read the repo, the adapter's package, and the installed packages it can import, but cannot write files, start processes, or create worker threads. This SHALL include adapters from the local pack. Each adapter run SHALL have a time limit, 60 seconds by default.
 
 #### Scenario: Adapter tries to change the repo
 
 - **WHEN** an adapter tries to write a file or start a process
 - **THEN** the attempt fails with an access error
 - **AND** no file in the repo changes
+
+#### Scenario: Adapter with its own dependency
+
+- **WHEN** a producer's fixture runs an adapter that imports a package its pack depends on
+- **THEN** the import succeeds, though the fixture sits outside the producer's `node_modules`
 
 #### Scenario: Adapter exceeds the time limit
 

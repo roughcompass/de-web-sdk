@@ -14,7 +14,8 @@ import {
   sync,
   type CheckOptions,
 } from "../src/index.ts";
-import { git, installPack, write } from "./helpers.ts";
+import { git, installPack, tmpDir, write } from "./helpers.ts";
+import { runAdapter } from "../src/runner.ts";
 import { ADAPTER_PACK, machine, readConfig, RUNTIME_PACK, scenario, setConfig } from "./scenario.ts";
 
 const opts = (root: string) => ({ root, rootKeys: [], network: false });
@@ -108,6 +109,19 @@ describe("check: adapter contract and isolation", () => {
       assert.equal(existsSync(path.join(s.root, "pwned.txt")), false);
     });
   }
+
+  it("lets an adapter import its package's dependencies when the repo is elsewhere, as in a producer's fixtures", async () => {
+    const producer = tmpDir("dws-adapter-deps-");
+    write(producer, "node_modules/range-lib/package.json", { name: "range-lib", version: "1.0.0", type: "module", exports: "./index.js" });
+    write(producer, "node_modules/range-lib/index.js", "export const answer = 42;\n");
+    write(producer, "packages/adapter/package.json", { name: "@example-platform/adapter", version: "1.0.0", type: "module" });
+    write(producer, "packages/adapter/adapters/a.mjs", 'import { answer } from "range-lib";\nexport default ({ result }) => ({ results: [result({ file: "a.txt", fingerprint: "k", message: `answer ${answer}` })] });\n');
+    const fixture = tmpDir("dws-fixture-");
+    write(fixture, "a.txt", "x\n");
+    const run = await runAdapter({ module: path.join(producer, "packages/adapter/adapters/a.mjs"), root: fixture, rule: "p#r", facts: { bundler: "none", moduleFederation: "none", role: "none", packages: {} }, options: {}, files: ["a.txt"], timeoutMs: 20_000 });
+    assert.ok(run.ok, run.ok ? "" : run.error);
+    assert.equal(run.ok && run.findings[0]!.message, "answer 42");
+  });
 
   it("stops an adapter that exceeds its time limit", async () => {
     const s = await scenario({ rules: [machine("hang", "hang")], config: { mode: "enforce", adapterTimeoutSeconds: 1 } });

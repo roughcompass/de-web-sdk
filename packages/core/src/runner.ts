@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { realpathSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AdapterFacts, SarifResult } from "./adapter.ts";
@@ -70,12 +70,23 @@ function packageRootOf(file: string): string {
   }
 }
 
+/** Every node_modules directory that Node.js searches from `dir`, so an adapter can import its own dependencies. */
+function moduleDirs(dir: string): string[] {
+  const out: string[] = [];
+  for (let d = dir; ; d = path.dirname(d)) {
+    const candidate = path.join(d, "node_modules");
+    if (existsSync(candidate)) out.push(candidate);
+    if (path.dirname(d) === d) return out;
+  }
+}
+
 /** Node.js flags for the adapter process: read access only. */
 export function permissionFlags(job: Pick<AdapterJob, "root" | "module">): string[] {
   const host = hostPath();
+  const adapterPackage = packageRootOf(job.module);
   // The permission model compares path strings, so allow each path and its real path.
   const reads = new Set(
-    [job.root, path.resolve(path.dirname(host), ".."), packageRootOf(job.module)].flatMap((p) => [p, real(p)]),
+    [job.root, path.resolve(path.dirname(host), ".."), adapterPackage, ...moduleDirs(adapterPackage), ...moduleDirs(real(adapterPackage))].flatMap((p) => [p, real(p)]),
   );
   const inherited = process.execArgv.filter((a) => a.startsWith("--conditions") || a.startsWith("-C") || a === "--experimental-strip-types");
   return ["--permission", ...[...reads].map((p) => `--allow-fs-read=${p}`), ...inherited];
@@ -133,7 +144,7 @@ export function runAdapter(job: AdapterJob): Promise<AdapterRun> {
         return;
       }
       if (!reply.ok) {
-        const access = reply.code === "ERR_ACCESS_DENIED" ? " (access denied: adapters can read the repo but can't write files, start processes, or create workers)" : "";
+        const access = reply.code === "ERR_ACCESS_DENIED" ? " (access denied: adapters can read the repo and installed packages, but can't write files, start processes, or create workers)" : "";
         finish({ ok: false, error: `the adapter crashed: ${reply.error}${access}`, durationMs });
         return;
       }
