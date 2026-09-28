@@ -42,7 +42,7 @@ A check adapter SHALL receive the repo root, the repo's facts, and the rule's op
 
 ### Requirement: Adapter isolation
 
-`check` SHALL run each adapter in a separate process that can read the repo, the adapter's package, and the installed packages it can import, but cannot write files, start processes, or create worker threads. This SHALL include adapters from the local pack. Each adapter run SHALL have a time limit, 60 seconds by default.
+`check` SHALL run each adapter in a separate process that cannot write files, start processes, or create worker threads. The process SHALL be able to read the repo, the adapter's package, and the installed packages that the adapter can import. This SHALL include adapters from the local pack. Each adapter run SHALL have a time limit, 60 seconds by default.
 
 #### Scenario: Adapter tries to change the repo
 
