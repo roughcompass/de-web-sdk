@@ -45,7 +45,7 @@ A pack's eval configuration SHALL list the models its evals cover, by alias. An 
 
 ### Requirement: Pluggable agent drivers
 
-The runner SHALL run agents through drivers. The SDK SHALL ship a Claude Code driver and a reference harness driver for OpenAI-compatible endpoints. It SHALL also ship a VS Code driver that runs the reference harness with Copilot's models. Teams MAY add drivers without an SDK release.
+The runner SHALL run agents through drivers. The SDK SHALL ship a Claude Code driver and a reference harness driver for OpenAI-compatible endpoints. It SHALL also ship a VS Code driver that runs the reference harness with Copilot's models. Teams MAY add drivers without an SDK release. The SDK's drivers SHALL give agents the SDK's MCP server in trials, without the tool that sends feedback. Their own prompts SHALL NOT name the SDK's tools or commands, so only the pack and the repo's files lead agents to them. Each trial SHALL record which SDK tools and commands the agent used.
 
 #### Scenario: Claude model through Claude Code
 
@@ -62,6 +62,12 @@ The runner SHALL run agents through drivers. The SDK SHALL ship a Claude Code dr
 - **WHEN** a producer runs evals from the VS Code extension and consents to its use of Copilot's models
 - **THEN** each run drives the reference harness with a Copilot model through VS Code's language model API
 - **AND** it loads the repo instruction files that GitHub Copilot documents
+
+#### Scenario: Trial without the pack
+
+- **WHEN** the reference harness runs a trial without the pack
+- **THEN** nothing in its prompt names the SDK's commands
+- **AND** a refused command's error lists the commands the trial allows
 
 ### Requirement: Local runs
 
@@ -110,6 +116,12 @@ For each model, the runner SHALL run each task a configured number of times in e
 - **WHEN** a pack has a published version
 - **THEN** the report compares the candidate with both the published version and the no-pack condition
 
+#### Scenario: Published version the producer repo doesn't trust
+
+- **WHEN** the published version fails verification under the trust policy in the producer's repo
+- **THEN** the run stops before any trial starts
+- **AND** it names the trust policy file and the option that skips the published condition
+
 ### Requirement: Trial integrity
 
 The runner SHALL retry a trial once only when the driver fails before the agent acts, such as during a provider outage. Every other failure SHALL count against the trial. Each trial SHALL record where it ran: the environment, driver, route, tool version, and the model that the tool reports. Raw prompts, transcripts, and diffs SHALL stay in a local cache that the pack's repo ignores.
@@ -126,7 +138,7 @@ The runner SHALL retry a trial once only when the driver fails before the agent 
 
 ### Requirement: Reuse of earlier results
 
-The runner SHALL reuse no-pack and published results while the task, starting state, driver, route, model, agent version, and pack digest stay the same.
+The runner SHALL reuse no-pack and published results until an input changes. The inputs are the task, starting state, driver, route, model, agent version, SDK version, and pack digest.
 
 #### Scenario: Second candidate
 

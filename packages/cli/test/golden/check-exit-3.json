@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "check",
+  "sdkVersion": "0.1.0",
+  "mode": "enforce",
+  "exitCode": 3,
+  "summary": {
+    "newViolations": 0,
+    "baselined": 0,
+    "excepted": 0,
+    "adapterErrors": 1,
+    "ignoredFiles": 0,
+    "staleBaselineEntries": 0
+  },
+  "violations": [],
+  "adapterErrors": [
+    {
+      "rule": "@example-platform/runtime#crashes",
+      "error": "Adapter @example-platform/mf2-adapter#crash: the adapter crashed: boom"
+    }
+  ],
+  "rules": [
+    {
+      "rule": "@example-platform/runtime#crashes",
+      "enforcement": "machine",
+      "locked": false,
+      "status": "error",
+      "violations": 0,
+      "ignoredResults": 0
+    }
+  ],
+  "advisory": [],
+  "exceptions": [],
+  "ignored": [],
+  "baseline": {
+    "present": false,
+    "stale": []
+  },
+  "entryPoints": {
+    "stale": []
+  },
+  "overrides": [],
+  "diagnostics": []
+}

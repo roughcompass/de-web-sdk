@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0-local.json",
+  "specVersion": "0",
+  "owner": { "team": "Payments Web", "contact": "#payments-web" },
+  "feedback": "https://git.example.com/payments/checkout-remote/issues/new?title={title}&body={body}",
+  "rules": [
+    {
+      "id": "use-api-client",
+      "title": "Call backend services through src/api/client.ts",
+      "enforcement": "advisory",
+      "paths": ["src/**/*.{ts,tsx}"],
+      "rationale": "The shared client adds the authentication, retries, and tracing headers that the backend requires.",
+      "guidance": "guidance/use-api-client.md"
+    }
+  ]
+}

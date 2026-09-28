@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/skill.v1.json",
+  "title": "de-web-sdk skill output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "name",
+    "skill",
+    "pack",
+    "description",
+    "uri",
+    "dir",
+    "files",
+    "content"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "skill"
+    },
+    "name": {
+      "type": "string"
+    },
+    "skill": {
+      "type": "string"
+    },
+    "pack": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "uri": {
+      "type": "string"
+    },
+    "dir": {
+      "type": "string"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "size"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "digest": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "string"
+    }
+  }
+}

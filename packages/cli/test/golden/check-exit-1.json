@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "check",
+  "sdkVersion": "0.1.0",
+  "mode": "enforce",
+  "exitCode": 1,
+  "summary": {
+    "newViolations": 1,
+    "baselined": 0,
+    "excepted": 0,
+    "adapterErrors": 0,
+    "ignoredFiles": 0,
+    "staleBaselineEntries": 0
+  },
+  "violations": [
+    {
+      "rule": "@example-platform/runtime#react-singleton",
+      "owner": {
+        "team": "Platform Web Runtime",
+        "contact": "#platform-web-runtime"
+      },
+      "rationale": "Because react-singleton matters.",
+      "file": "dist/mf-manifest.json",
+      "message": "react is shared without the singleton setting.",
+      "fix": "Fix react-singleton.",
+      "contest": {
+        "link": "https://git.example.com/platform/pack/issues/new",
+        "command": "npx --no de-web-sdk feedback @example-platform/runtime#react-singleton --kind false-positive --message \"<reason>\""
+      },
+      "fingerprint": "0521bc32123693d2bc38",
+      "state": "new"
+    }
+  ],
+  "adapterErrors": [],
+  "rules": [
+    {
+      "rule": "@example-platform/runtime#react-singleton",
+      "enforcement": "machine",
+      "locked": true,
+      "status": "violated",
+      "violations": 1,
+      "ignoredResults": 0
+    }
+  ],
+  "advisory": [
+    "@example-platform/runtime#mf2-only"
+  ],
+  "exceptions": [],
+  "ignored": [],
+  "baseline": {
+    "present": false,
+    "stale": []
+  },
+  "entryPoints": {
+    "stale": []
+  },
+  "overrides": [],
+  "diagnostics": []
+}

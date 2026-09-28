@@ -1,0 +1,4 @@
+de-web-sdk check: enforce mode. 0 new violations, 0 baselined, 0 covered by exceptions, 0 adapter errors, 0 files ignored.
+Ran 1 machine rule. 1 advisory rule applies to agents only.
+
+Exit code 0.

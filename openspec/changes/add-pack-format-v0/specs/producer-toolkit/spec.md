@@ -50,7 +50,7 @@ Building a pack SHALL fail when any text file contains a hidden character define
 
 ### Requirement: Sign a pack
 
-Where the registry or CI can't produce npm provenance, the toolchain SHALL sign the built manifest with the producer's key, in the Sigstore bundle format. The signature SHALL fail to verify if any byte of the manifest changes.
+Where the registry or CI can't produce npm provenance, the toolchain SHALL sign the built manifest with the producer's key, in the Sigstore bundle format. The signature SHALL fail to verify if any byte of the manifest changes. The toolchain SHALL refuse to sign a manifest whose digests don't match the published files. It SHALL create a producer key pair on request. It SHALL write the private key readable only by its owner, and SHALL refuse to replace an existing private key.
 
 #### Scenario: Signature over an unchanged manifest
 
@@ -61,6 +61,17 @@ Where the registry or CI can't produce npm provenance, the toolchain SHALL sign 
 
 - **WHEN** one byte of a signed manifest changes
 - **THEN** the signature fails to verify
+
+#### Scenario: File edited after the build
+
+- **WHEN** a producer edits a published file after building and then signs
+- **THEN** signing fails and names the changed file
+- **AND** validation warns that the pack needs a new build
+
+#### Scenario: Private key that git would commit
+
+- **WHEN** a producer creates a key pair inside a git repository, in a folder git doesn't ignore
+- **THEN** the toolchain warns that git would commit the private key
 
 ### Requirement: Publish through a standard npm registry
 

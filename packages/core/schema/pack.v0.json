@@ -1,0 +1,609 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/agent-pack/v0.json",
+  "title": "Agent pack manifest, specification version 0",
+  "description": "Declares a pack's owner, feedback channel, rules, skills, reference docs, agent commands, and check adapters. Consumers ignore fields they don't recognize within a major version, except inside conditions.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "specVersion",
+    "id",
+    "version",
+    "owner",
+    "feedback"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "specVersion": {
+      "$ref": "#/$defs/specVersion"
+    },
+    "id": {
+      "$ref": "#/$defs/packageName"
+    },
+    "version": {
+      "$ref": "#/$defs/semver"
+    },
+    "owner": {
+      "$ref": "#/$defs/owner"
+    },
+    "feedback": {
+      "$ref": "#/$defs/feedback"
+    },
+    "feedbackAdapter": {
+      "$ref": "#/$defs/feedbackAdapter"
+    },
+    "governs": {
+      "$ref": "#/$defs/packageRanges"
+    },
+    "appliesWhen": {
+      "$ref": "#/$defs/condition"
+    },
+    "paths": {
+      "$ref": "#/$defs/paths"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skill"
+      }
+    },
+    "docs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/doc"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/command"
+      }
+    },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/adapter"
+      }
+    },
+    "evals": {
+      "$ref": "#/$defs/evals"
+    },
+    "files": {
+      "$ref": "#/$defs/files"
+    }
+  },
+  "$defs": {
+    "localManifest": {
+      "description": "A repo's local pack. It needs no identifier, version, digests, provenance, or evals.",
+      "type": "object",
+      "required": [
+        "specVersion",
+        "owner",
+        "feedback"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specVersion": {
+          "$ref": "#/$defs/specVersion"
+        },
+        "owner": {
+          "$ref": "#/$defs/owner"
+        },
+        "feedback": {
+          "$ref": "#/$defs/feedback"
+        },
+        "feedbackAdapter": {
+          "$ref": "#/$defs/feedbackAdapter"
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/skill"
+          }
+        },
+        "docs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/doc"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/command"
+          }
+        },
+        "adapters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/adapter"
+          }
+        }
+      }
+    },
+    "specVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$",
+      "description": "Major, or major.minor. Consumers refuse a major version they don't support."
+    },
+    "packageName": {
+      "type": "string",
+      "pattern": "^(@[a-z0-9][a-z0-9._~-]*/)?[a-z0-9][a-z0-9._~-]*$",
+      "maxLength": 214,
+      "description": "The name of the npm package that contains the pack."
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "maxLength": 64
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(^|/)\\.\\.(/|$)).+$",
+      "description": "A path relative to the pack's directory, or to the referenced package when `from` is set."
+    },
+    "owner": {
+      "type": "object",
+      "required": [
+        "team"
+      ],
+      "properties": {
+        "team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contact": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "feedback": {
+      "type": "string",
+      "pattern": "^(https?://|mailto:).+",
+      "description": "The link where people send feedback and contest rules. `{title}` and `{body}` placeholders are filled in when present. It's also the fallback when a feedback adapter can't submit."
+    },
+    "packageRanges": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/packageName"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "condition": {
+      "type": "object",
+      "description": "Repo facts the item applies to. Every listed fact must match.",
+      "additionalProperties": false,
+      "properties": {
+        "packages": {
+          "$ref": "#/$defs/packageRanges"
+        },
+        "bundler": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "vite",
+              "webpack",
+              "rspack",
+              "none"
+            ]
+          }
+        },
+        "moduleFederation": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "none",
+              "1",
+              "2"
+            ]
+          }
+        },
+        "role": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "host",
+              "remote",
+              "both",
+              "none"
+            ]
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "enforcement",
+        "rationale"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "enforcement": {
+          "enum": [
+            "machine",
+            "advisory"
+          ]
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "owner": {
+          "$ref": "#/$defs/owner"
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "guidance": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "fix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "check": {
+          "type": "object",
+          "required": [
+            "adapter"
+          ],
+          "properties": {
+            "pack": {
+              "$ref": "#/$defs/packageName"
+            },
+            "adapter": {
+              "$ref": "#/$defs/identifier"
+            },
+            "options": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "enforcement": {
+            "const": "machine"
+          }
+        },
+        "required": [
+          "enforcement"
+        ]
+      },
+      "then": {
+        "required": [
+          "check"
+        ]
+      }
+    },
+    "skill": {
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "from": {
+          "$ref": "#/$defs/packageName"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        }
+      }
+    },
+    "doc": {
+      "type": "object",
+      "required": [
+        "title",
+        "path"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "from": {
+          "$ref": "#/$defs/packageName"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "name",
+        "run",
+        "use"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "run": {
+          "type": "string",
+          "minLength": 1
+        },
+        "use": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "$ref": "#/$defs/packageName"
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        }
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "required": [
+        "name",
+        "module"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "module": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "from": {
+          "$ref": "#/$defs/packageName"
+        }
+      }
+    },
+    "rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "rates": {
+      "type": "object",
+      "required": [
+        "without",
+        "with"
+      ],
+      "properties": {
+        "without": {
+          "$ref": "#/$defs/rate"
+        },
+        "with": {
+          "$ref": "#/$defs/rate"
+        },
+        "published": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "trials",
+              "pass"
+            ],
+            "properties": {
+              "trials": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pass": {
+                "$ref": "#/$defs/rates"
+              },
+              "api": {
+                "$ref": "#/$defs/rates"
+              },
+              "ranIn": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "model",
+              "reason",
+              "approvedBy",
+              "expires"
+            ],
+            "properties": {
+              "model": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "approvedBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expires": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/relativePath"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "feedbackAdapter": {
+      "type": "object",
+      "description": "How the SDK submits feedback reports. Types this SDK doesn't know fall back to the feedback link.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "link, mcp, jira, or feature-request. jira and feature-request are reached through an MCP server for now."
+        },
+        "mcp": {
+          "$ref": "#/$defs/mcpFeedbackTarget"
+        }
+      },
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "mcp",
+              "jira",
+              "feature-request"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "mcp"
+        ]
+      }
+    },
+    "mcpFeedbackTarget": {
+      "type": "object",
+      "description": "The MCP server and tool that receive reports. The SDK finds the server among the developer's configured MCP servers.",
+      "required": [
+        "server",
+        "tool"
+      ],
+      "properties": {
+        "server": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The server's name in the developer's MCP configuration."
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "The server's address, used to match a configured server when names differ."
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "arguments": {
+          "type": "object",
+          "description": "Tool arguments. Strings can use {title}, {body}, {rule}, {ruleId}, {kind}, {message}, {pack}, {packVersion}, and {report}.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

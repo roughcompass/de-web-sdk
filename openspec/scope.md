@@ -16,7 +16,7 @@ Rules live wherever each organization put them: Confluence pages, READMEs, lint 
 - **A toolchain.** Producers author, validate, evaluate, sign, and publish packs. Consumers install, resolve, check, baseline, waive, and upgrade packs, and send feedback to pack owners.
 - **Integrations.** The SDK converts resolved packs into the formats agents and tools already read, such as AGENTS.md, Agent Skills, agent plugins, Model Context Protocol (MCP) servers, lint configs, and continuous integration (CI) checks. No team should have to change agent vendors to adopt it.
 
-A pack is the source a producer writes, not another plugin format. AGENTS.md blocks, installed skills, and plugins are build outputs that the SDK regenerates when a pack or an agent tool changes.
+A pack is the source a producer writes, not another plugin format. AGENTS.md blocks, MCP server configuration, and plugins are build outputs that the SDK regenerates when a pack or an agent tool changes.
 
 ## Who publishes and who consumes
 
@@ -105,12 +105,13 @@ Must items are needed for the SDK to do its job. Should items matter but can fol
 | Conflict detection and layered precedence between packs | Must | No |
 | Ontology meta-model | Should | No |
 | Producer toolkit: scaffold, validate, evaluate, review, sign, and publish | Must | Yes |
-| Consumer CLI: `init`, `sync`, `resolve`, `check`, and `feedback` | Must | Yes |
+| Consumer CLI: `init`, `sync`, `resolve`, `check`, `skill`, and `feedback` | Must | Yes |
 | Consumer CLI: `upgrade`, `explain`, and `waive` | Should | No |
 | Agent contract: no prompts, offline operation, versioned JSON, and exit codes 0 to 3 | Must | Yes |
-| Agent adapters: committed entry points, linked skills and docs, and Claude Code and GitHub Copilot support | Must | Yes |
+| Agent adapters: committed entry points, skills and docs served from verified packs, and Claude Code and GitHub Copilot support | Must | Yes |
 | Agent adapters: Agent Plugins and Claude Code plugin outputs | Should | No |
-| Local MCP server that hosts tools from packs, including views of the running shell | Should | No |
+| Local MCP server with the SDK's rules, checks, skills, docs, and feedback | Must | Yes |
+| Tools that packs add to the local MCP server, including views of the running shell | Should | No |
 | MCP servers that packs declare for agents, within enterprise policy | Could | No |
 | Per-tool hooks, such as blocking edits until an agent loads a pack's skill | Could | No |
 | Check adapters: a SARIF-based contract and isolated execution | Must | Yes |
@@ -121,6 +122,7 @@ Must items are needed for the SDK to do its job. Should items matter but can fol
 | Supply-chain controls: npm provenance or Sigstore-format signatures, digests, hidden-character checks, source allowlists, and an enterprise trust policy | Must | Yes |
 | Resolution record for each build, including exceptions | Must | Yes |
 | Registry interface: discovery, adoption tracking, change notification, and impact analysis | Should | No |
+| Feedback adapters: a link, an MCP server, and Jira and a feature request tool reached through MCP | Must | Yes |
 | Evals: model matrix, API adoption, publish gate, human review, and feedback, in the pipeline or locally | Must | Yes |
 | VS Code extension for local evals with Copilot's models, guided Copilot trials, and review | Must | Yes |
 | Setup hooks for the platform's project template and shared CI pipeline | Must | Yes |
@@ -182,7 +184,7 @@ These targets are hypotheses. A pilot should confirm or replace them.
 | Brownfield revolt: CI goes red on day one, and teams disable the SDK | Report mode at install, baselines, recorded exceptions, and new-code-only enforcement |
 | Federation drift: one remote relaxes a shared rule and breaks the shell | Locked rules, owner-approved exceptions, and no way to turn off a pack's rule |
 | Agent tool churn: vendors change formats faster than packs can follow | All agent formats generated from one source, built on open standards |
-| Duplicate tooling: the SDK restates what a producer such as Salt ships | Packs point to producers' own tooling in place, and `sync` skips skills the producer already installed |
+| Duplicate tooling: the SDK restates what a producer such as Salt ships | Packs point to producers' own tooling in place |
 | Version skew: remotes and hosts run different contract versions | Semantic versioning, contract conformance tests in CI, and automated upgrade pull requests |
 | Supply-chain and prompt-injection attacks: a compromised pack instructs agents to do harm | Signed packs, content digests, sanitization, pinned versions, allowlisted sources, and a private registry |
 | Infrastructure dependency: adoption stalls while a central service is built | A default implementation that needs only a package registry, git, and CI |
@@ -194,7 +196,7 @@ Questions 1 through 4 change the scope most.
 
 1. Is the SDK only for agents that build UI, or also for agents that compose UI for clients at run time?
 2. Can platform and design system teams require blocking CI checks in LOB repos, or does each LOB opt in? *Partial answer, 2026-09-27:* the platform owns a shared Jules pipeline, so it could require the check. The first change makes the step opt-in.
-3. Which coding agents are approved, and do restrictions apply, such as a ban on external MCP servers? *Partial answer, 2026-09-27:* the first adapters target Claude Code and GitHub Copilot. GitHub Copilot's CLI isn't supported. Other restrictions are unknown.
+3. Which coding agents are approved, and do restrictions apply, such as a ban on external MCP servers? *Partial answer, 2026-09-27:* the first adapters target Claude Code and GitHub Copilot. GitHub Copilot's CLI isn't supported. The SDK serves agents through a local MCP server as well as its CLI, and producers' own MCP servers wait. Whether enterprise policy allows workspace MCP servers in VS Code and Claude Code is unknown.
 4. Which enterprise systems must the SDK integrate with rather than duplicate? *Partial answer, 2026-09-27:* packages and VSIX files ship through JFrog Artifactory, and CI runs on Jules. A developer portal, service catalog, and dependency-update bot are unknown.
 5. Which React versions, MF2 bundlers, and TypeScript configurations must the SDK support? *Partial answer, 2026-09-27:* the pilot repo uses Vite with MF2. MF1 repos use webpack.
 6. How many brownfield repos exist, how far are they from MF2, and are any not on React? *Partial answer, 2026-09-27:* some repos still use MF1. Counts are unknown.

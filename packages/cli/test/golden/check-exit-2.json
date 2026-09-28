@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "check",
+  "sdkVersion": "0.1.0",
+  "mode": "enforce",
+  "exitCode": 2,
+  "summary": {
+    "newViolations": 0,
+    "baselined": 0,
+    "excepted": 0,
+    "adapterErrors": 0,
+    "ignoredFiles": 0,
+    "staleBaselineEntries": 0
+  },
+  "violations": [],
+  "adapterErrors": [],
+  "rules": [],
+  "advisory": [
+    "@example-platform/runtime#mf2-only"
+  ],
+  "exceptions": [],
+  "ignored": [],
+  "baseline": {
+    "present": false,
+    "stale": []
+  },
+  "entryPoints": {
+    "stale": []
+  },
+  "overrides": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "exception.expired",
+      "message": "The exception for @example-platform/runtime#react-singleton expired on 2020-01-01. Its owner, payments-web, must fix the violations or renew it",
+      "file": ".de-web-sdk/config.json",
+      "field": "exceptions[0]"
+    }
+  ]
+}

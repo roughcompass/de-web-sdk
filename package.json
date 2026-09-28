@@ -1,0 +1,24 @@
+{
+  "name": "de-web-sdk",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/cli",
+    "packages/pack",
+    "packages/vscode"
+  ],
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b packages/core packages/cli packages/pack packages/vscode",
+    "typecheck": "tsc -b packages/core packages/cli packages/pack packages/vscode",
+    "test": "node --conditions=development --test --test-concurrency=4 \"packages/*/test/**/*.test.ts\"",
+    "clean": "rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^7.0.2"
+  }
+}

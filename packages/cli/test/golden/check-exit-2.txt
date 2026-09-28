@@ -1,0 +1,5 @@
+de-web-sdk check: stopped on a configuration error, before running any rule.
+
+error: The exception for @example-platform/runtime#react-singleton expired on 2020-01-01. Its owner, payments-web, must fix the violations or renew it (.de-web-sdk/config.json, exceptions[0])
+
+Exit code 2.

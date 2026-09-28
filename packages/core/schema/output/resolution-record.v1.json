@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/resolution-record.v1.json",
+  "title": "de-web-sdk resolution record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "sdkVersion",
+    "createdAt",
+    "mode",
+    "exitCode",
+    "packs",
+    "facts",
+    "rules",
+    "exceptions",
+    "ignored",
+    "results",
+    "adapterErrors"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "resolution-record"
+    },
+    "sdkVersion": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "report",
+        "enforce"
+      ]
+    },
+    "exitCode": {
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "trustPolicy": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "packs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "via",
+          "digest",
+          "provenance"
+        ]
+      }
+    },
+    "skipped": {
+      "type": "array"
+    },
+    "facts": {
+      "type": "object",
+      "required": [
+        "effective",
+        "detected",
+        "declared",
+        "disagreements"
+      ]
+    },
+    "rules": {
+      "type": "array"
+    },
+    "exclusions": {
+      "type": "array"
+    },
+    "exceptions": {
+      "type": "array"
+    },
+    "ignored": {
+      "type": "array"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "file",
+          "fingerprint",
+          "state"
+        ]
+      }
+    },
+    "adapterErrors": {
+      "type": "array"
+    },
+    "overrides": {
+      "type": "array"
+    }
+  }
+}

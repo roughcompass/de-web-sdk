@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/feedback.v1.json",
+  "title": "de-web-sdk feedback output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "exitCode",
+    "draftId",
+    "adapter",
+    "link",
+    "prefilled",
+    "report"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "feedback"
+    },
+    "exitCode": {
+      "const": 0
+    },
+    "link": {
+      "type": "string"
+    },
+    "prefilled": {
+      "type": "boolean"
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "reportVersion",
+        "pack",
+        "rule",
+        "kind",
+        "message",
+        "facts",
+        "sdkVersion"
+      ]
+    },
+    "draftId": {
+      "type": "string"
+    },
+    "adapter": {
+      "type": "object",
+      "required": [
+        "type",
+        "destination"
+      ]
+    },
+    "submission": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "submitted",
+            "link",
+            "declined"
+          ]
+        }
+      }
+    }
+  }
+}

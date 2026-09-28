@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/agent-pack/v0-local.json",
+  "title": "Local agent pack manifest, specification version 0",
+  "$ref": "https://schemas.example.com/agent-pack/v0.json#/$defs/localManifest"
+}

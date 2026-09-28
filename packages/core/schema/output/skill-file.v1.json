@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/skill-file.v1.json",
+  "title": "de-web-sdk skill file output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "skill",
+    "path",
+    "text",
+    "offset",
+    "size"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "skill-file"
+    },
+    "skill": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "offset": {
+      "type": "integer"
+    },
+    "nextOffset": {
+      "type": "integer"
+    },
+    "size": {
+      "type": "integer"
+    },
+    "digest": {
+      "type": "string"
+    }
+  }
+}

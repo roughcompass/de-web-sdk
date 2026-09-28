@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/sync.v1.json",
+  "title": "de-web-sdk sync output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "exitCode",
+    "packs",
+    "rules",
+    "skills",
+    "docs",
+    "commands",
+    "facts",
+    "exclusions",
+    "overrides",
+    "written",
+    "deleted",
+    "diagnostics"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "sync"
+    },
+    "exitCode": {
+      "const": 0
+    },
+    "packs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "via"
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "enforcement",
+          "locked"
+        ]
+      }
+    },
+    "skills": {
+      "type": "array"
+    },
+    "docs": {
+      "type": "array"
+    },
+    "commands": {
+      "type": "array"
+    },
+    "facts": {
+      "type": "object",
+      "required": [
+        "bundler",
+        "moduleFederation",
+        "role",
+        "packages"
+      ]
+    },
+    "disagreements": {
+      "type": "array"
+    },
+    "limitations": {
+      "type": "array"
+    },
+    "notEvaluated": {
+      "type": "array"
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "ref",
+          "reason"
+        ]
+      }
+    },
+    "skipped": {
+      "type": "array"
+    },
+    "overrides": {
+      "type": "array"
+    },
+    "written": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deleted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "mcpServer": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The name of the SDK's MCP server entry in .mcp.json, or null when the repo turns it off"
+    }
+  }
+}

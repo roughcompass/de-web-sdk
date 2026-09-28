@@ -1,0 +1,32 @@
+{
+  "name": "@de-web-sdk/cli",
+  "version": "0.1.0-alpha.0",
+  "description": "Consumer CLI: set up a repo, get the rules that apply, check conformance, and send feedback.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "bin": {
+    "de-web-sdk": "./bin/de-web-sdk.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/main.ts",
+      "development": "./src/main.ts",
+      "default": "./dist/main.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@de-web-sdk/core": "0.1.0-alpha.0",
+    "@modelcontextprotocol/sdk": "1.30.1"
+  }
+}

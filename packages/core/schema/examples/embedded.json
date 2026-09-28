@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0.json",
+  "specVersion": "0",
+  "id": "@example-ds/core",
+  "version": "4.2.0",
+  "owner": { "team": "Design System", "contact": "#design-system" },
+  "feedback": "https://git.example.com/design-system/core/issues/new?title={title}&body={body}",
+  "governs": { "@example-ds/core": "4.2.0" },
+  "rules": [
+    {
+      "id": "no-deprecated-props",
+      "title": "Don't use props deprecated in 4.x",
+      "enforcement": "advisory",
+      "paths": ["src/**/*.tsx"],
+      "rationale": "4.x deprecates these props, and 5.0 removes them.",
+      "guidance": "guidance/no-deprecated-props.md"
+    }
+  ],
+  "docs": [{ "title": "Component guides", "path": "guides", "description": "One Markdown guide per component." }]
+}

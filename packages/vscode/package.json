@@ -1,0 +1,59 @@
+{
+  "name": "de-web-sdk-vscode",
+  "displayName": "de-web-sdk evals",
+  "description": "Runs pack evals with Copilot's models, guides trials in Copilot's agent mode, and hosts blind trial review.",
+  "version": "0.1.0-alpha.0",
+  "publisher": "de-web-sdk",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.101.0",
+    "node": ">=22.13.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode the extension only explains how to trust a guided trial folder. Evals, trials, and review need a trusted folder."
+    }
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:.de-web-sdk-trial.json",
+    "onUri"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "deWebSdk.startBridge",
+        "title": "de-web-sdk: Start the eval bridge for Copilot models"
+      },
+      {
+        "command": "deWebSdk.stopBridge",
+        "title": "de-web-sdk: Stop the eval bridge"
+      },
+      {
+        "command": "deWebSdk.runEvals",
+        "title": "de-web-sdk: Run pack evals with Copilot models"
+      },
+      {
+        "command": "deWebSdk.startGuidedTrial",
+        "title": "de-web-sdk: Start a guided Copilot trial"
+      },
+      {
+        "command": "deWebSdk.finishGuidedTrial",
+        "title": "de-web-sdk: Mark this guided trial finished"
+      },
+      {
+        "command": "deWebSdk.reviewTrials",
+        "title": "de-web-sdk: Review eval trials"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "package": "vsce package --no-dependencies --out dist/de-web-sdk-vscode.vsix"
+  },
+  "devDependencies": {
+    "@types/vscode": "~1.101.0"
+  }
+}

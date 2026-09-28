@@ -1,0 +1,8 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0.json",
+  "specVersion": "0",
+  "id": "@example-platform/web-baseline",
+  "version": "1.3.0",
+  "owner": { "team": "Platform Web Runtime", "contact": "#platform-web-runtime" },
+  "feedback": "https://git.example.com/platform/web-baseline/issues/new?title={title}&body={body}"
+}

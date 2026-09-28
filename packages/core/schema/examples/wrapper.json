@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0.json",
+  "specVersion": "0",
+  "id": "@example-platform/salt-pack",
+  "version": "1.0.0",
+  "owner": { "team": "Design System Integration", "contact": "#salt-adoption" },
+  "feedback": "https://git.example.com/platform/salt-pack/issues/new?title={title}&body={body}",
+  "appliesWhen": { "packages": { "@salt-ds/core": "*" } },
+  "skills": [{ "name": "salt-design-system", "from": "@salt-ds/knowledge", "path": "skills/salt-design-system" }],
+  "docs": [{ "title": "Salt guides", "from": "@salt-ds/knowledge", "path": "markdown/guides" }],
+  "commands": [
+    { "name": "salt-context", "from": "@salt-ds/cli", "run": "salt-ds context \"<task>\" --format markdown", "use": "Before building UI, to get Salt's guidance for the task" }
+  ],
+  "adapters": [{ "name": "salt-analyzer", "module": "adapters/salt-analyzer.mjs" }],
+  "rules": [
+    {
+      "id": "salt-deprecations",
+      "title": "Replace deprecated Salt APIs",
+      "enforcement": "machine",
+      "paths": ["src/**/*.{ts,tsx,css}"],
+      "rationale": "Deprecated Salt APIs stop receiving fixes, and a later major version removes them.",
+      "check": { "adapter": "salt-analyzer", "options": { "ruleset": "deprecations" } },
+      "fix": "Follow the migration record that the violation cites."
+    }
+  ]
+}

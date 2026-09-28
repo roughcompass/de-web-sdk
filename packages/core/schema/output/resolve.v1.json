@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/resolve.v1.json",
+  "title": "de-web-sdk resolve output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "files",
+    "rules",
+    "skills",
+    "docs",
+    "commands",
+    "omitted",
+    "budgetBytes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "resolve"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ref",
+          "pack",
+          "id",
+          "title",
+          "enforcement",
+          "locked",
+          "owner",
+          "rationale",
+          "contest"
+        ],
+        "properties": {
+          "owner": {
+            "type": "object",
+            "required": [
+              "team"
+            ],
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "contact": {
+                "type": "string"
+              }
+            }
+          },
+          "contest": {
+            "type": "object",
+            "required": [
+              "link",
+              "command"
+            ],
+            "properties": {
+              "link": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "pack",
+          "description",
+          "path"
+        ]
+      }
+    },
+    "docs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "pack",
+          "path"
+        ]
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "pack",
+          "run",
+          "use"
+        ]
+      }
+    },
+    "omitted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ref",
+          "command"
+        ]
+      }
+    },
+    "budgetBytes": {
+      "type": "integer"
+    }
+  }
+}

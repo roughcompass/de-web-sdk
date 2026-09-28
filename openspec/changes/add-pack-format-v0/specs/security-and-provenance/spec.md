@@ -94,6 +94,24 @@ The SDK SHALL reject any text file that a pack delivers to agents when the file 
 - **WHEN** an installed pack's guidance file contains characters in the range U+E0000 to U+E007F
 - **THEN** `sync` fails and names the file, line, and first code point found
 
+### Requirement: Content verified when served
+
+The SDK SHALL verify each skill and pack file against its pack's digest whenever it serves the file to an agent. It SHALL refuse a file that changed after install.
+
+#### Scenario: Skill edited on a developer's machine
+
+- **WHEN** a developer edits an installed skill file and an agent loads the skill through the SDK
+- **THEN** the SDK refuses the skill and names the file
+
+### Requirement: Credentials stay out of pack code
+
+Check adapters SHALL run without the developer's credentials in their environment. Feedback adapters SHALL be built into the SDK, so pack code never handles a developer's credentials.
+
+#### Scenario: Token in the developer's environment
+
+- **WHEN** a developer's environment holds a token for a feedback server and `check` runs a pack's adapter
+- **THEN** the adapter can't read the token
+
 ### Requirement: Fail closed
 
 A trust failure SHALL stop `sync` and `check` before any output is written or any adapter runs. Generated agent files SHALL stay unchanged.

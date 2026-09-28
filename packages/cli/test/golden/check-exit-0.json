@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "check",
+  "sdkVersion": "0.1.0",
+  "mode": "enforce",
+  "exitCode": 0,
+  "summary": {
+    "newViolations": 0,
+    "baselined": 0,
+    "excepted": 0,
+    "adapterErrors": 0,
+    "ignoredFiles": 0,
+    "staleBaselineEntries": 0
+  },
+  "violations": [],
+  "adapterErrors": [],
+  "rules": [
+    {
+      "rule": "@example-platform/runtime#react-singleton",
+      "enforcement": "machine",
+      "locked": true,
+      "status": "passed",
+      "violations": 0,
+      "ignoredResults": 0
+    }
+  ],
+  "advisory": [
+    "@example-platform/runtime#mf2-only"
+  ],
+  "exceptions": [],
+  "ignored": [],
+  "baseline": {
+    "present": false,
+    "stale": []
+  },
+  "entryPoints": {
+    "stale": []
+  },
+  "overrides": [],
+  "diagnostics": []
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0.json",
+  "specVersion": "0",
+  "id": "@example-platform/mf2-manifest-adapter",
+  "version": "1.0.0",
+  "owner": { "team": "Platform Web Runtime", "contact": "#platform-web-runtime" },
+  "feedback": "https://git.example.com/platform/web-runtime-pack/issues/new?title={title}&body={body}",
+  "adapters": [
+    { "name": "manifest-valid", "module": "adapters/manifest-valid.mjs" },
+    { "name": "shared-singletons", "module": "adapters/shared-singletons.mjs" }
+  ]
+}

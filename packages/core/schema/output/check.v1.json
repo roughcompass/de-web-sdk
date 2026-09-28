@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.com/de-web-sdk/output/check.v1.json",
+  "title": "de-web-sdk check output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "sdkVersion",
+    "mode",
+    "exitCode",
+    "summary",
+    "violations",
+    "adapterErrors",
+    "rules",
+    "advisory",
+    "exceptions",
+    "ignored",
+    "baseline",
+    "entryPoints",
+    "overrides",
+    "diagnostics"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "check"
+    },
+    "sdkVersion": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "report",
+        "enforce"
+      ]
+    },
+    "exitCode": {
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "newViolations",
+        "baselined",
+        "excepted",
+        "adapterErrors",
+        "ignoredFiles",
+        "staleBaselineEntries"
+      ]
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "owner",
+          "rationale",
+          "file",
+          "message",
+          "fix",
+          "contest",
+          "fingerprint",
+          "state"
+        ],
+        "properties": {
+          "owner": {
+            "type": "object",
+            "required": [
+              "team"
+            ],
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "contact": {
+                "type": "string"
+              }
+            }
+          },
+          "state": {
+            "enum": [
+              "new",
+              "baselined",
+              "excepted"
+            ]
+          },
+          "contest": {
+            "type": "object",
+            "required": [
+              "link",
+              "command"
+            ],
+            "properties": {
+              "link": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "adapterErrors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "error"
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "enforcement",
+          "locked",
+          "status"
+        ]
+      }
+    },
+    "advisory": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "owner",
+          "reason",
+          "expires"
+        ]
+      }
+    },
+    "ignored": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "reason",
+          "files"
+        ]
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "present",
+        "stale"
+      ]
+    },
+    "entryPoints": {
+      "type": "object",
+      "required": [
+        "stale"
+      ]
+    },
+    "overrides": {
+      "type": "array"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

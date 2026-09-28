@@ -1,0 +1,115 @@
+{
+  "$schema": "https://schemas.example.com/agent-pack/v0.json",
+  "specVersion": "0",
+  "id": "@example-platform/web-runtime-pack",
+  "version": "2.1.0",
+  "owner": {
+    "team": "Platform Web Runtime",
+    "contact": "#platform-web-runtime"
+  },
+  "feedback": "https://git.example.com/platform/web-runtime-pack/issues/new?title={title}&body={body}",
+  "feedbackAdapter": {
+    "type": "jira",
+    "mcp": {
+      "server": "atlassian",
+      "tool": "createJiraIssue",
+      "arguments": {
+        "projectKey": "WEBRT",
+        "issueTypeName": "Bug",
+        "summary": "{title}",
+        "description": "{body}"
+      }
+    }
+  },
+  "appliesWhen": {
+    "moduleFederation": [
+      "1",
+      "2"
+    ]
+  },
+  "rules": [
+    {
+      "id": "mf2-manifest",
+      "title": "Each remote publishes a valid MF2 manifest",
+      "enforcement": "machine",
+      "locked": true,
+      "appliesWhen": {
+        "role": [
+          "remote",
+          "both"
+        ]
+      },
+      "rationale": "The shell finds remotes and negotiates shared dependencies through the MF2 manifest.",
+      "guidance": "guidance/mf2-manifest.md",
+      "check": {
+        "pack": "@example-platform/mf2-manifest-adapter",
+        "adapter": "manifest-valid"
+      },
+      "fix": "Enable the manifest option in the Module Federation plugin. MF1 remotes use the migrate-to-mf2 skill."
+    },
+    {
+      "id": "react-singleton",
+      "title": "Share react and react-dom as singletons",
+      "enforcement": "machine",
+      "locked": true,
+      "appliesWhen": {
+        "moduleFederation": [
+          "2"
+        ]
+      },
+      "rationale": "Two copies of React on one page break hooks and context across remotes.",
+      "guidance": "guidance/react-singleton.md",
+      "check": {
+        "pack": "@example-platform/mf2-manifest-adapter",
+        "adapter": "shared-singletons",
+        "options": {
+          "packages": [
+            "react",
+            "react-dom"
+          ]
+        }
+      },
+      "fix": "Set singleton to true for react and react-dom in the plugin's shared config."
+    },
+    {
+      "id": "lazy-remotes",
+      "title": "Lazy-load remotes below the fold",
+      "enforcement": "advisory",
+      "appliesWhen": {
+        "role": [
+          "host",
+          "both"
+        ]
+      },
+      "paths": [
+        "src/**/*.tsx"
+      ],
+      "rationale": "Loading every remote up front delays the shell's first render.",
+      "guidance": "guidance/lazy-remotes.md"
+    }
+  ],
+  "skills": [
+    {
+      "name": "migrate-to-mf2",
+      "path": "skills/migrate-to-mf2",
+      "appliesWhen": {
+        "moduleFederation": [
+          "1"
+        ]
+      }
+    }
+  ],
+  "evals": {
+    "summary": {
+      "claude-sonnet": {
+        "trials": 20,
+        "pass": {
+          "without": 0.6,
+          "with": 0.9
+        },
+        "ranIn": "pipeline, claude-code"
+      }
+    },
+    "overrides": []
+  }
+}

@@ -1,0 +1,14 @@
+de-web-sdk check: enforce mode. 1 new violation, 0 baselined, 0 covered by exceptions, 0 adapter errors, 0 files ignored.
+Ran 1 machine rule. 1 advisory rule applies to agents only.
+
+New violations (these fail the check):
+
+  @example-platform/runtime#react-singleton (locked)
+    Location: dist/mf-manifest.json
+    Message: "react is shared without the singleton setting."
+    Owner: Platform Web Runtime (#platform-web-runtime)
+    Why: Because react-singleton matters.
+    Fix: Fix react-singleton.
+    Contest: https://git.example.com/platform/pack/issues/new, or run `npx --no de-web-sdk feedback @example-platform/runtime#react-singleton --kind false-positive --message "<reason>"`
+
+Exit code 1.

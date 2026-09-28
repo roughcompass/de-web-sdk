@@ -113,6 +113,20 @@ A pack MAY declare commands that agents can run, each with a description of when
 - **WHEN** a pack declares a command whose binary comes from a package that the pack doesn't depend on
 - **THEN** validation fails and names the command
 
+### Requirement: Feedback adapters
+
+A pack MAY select how the SDK sends feedback reports to its owner. The choices are its feedback link, an MCP server's tool, Jira, and a feature request tool. For now, Jira and the feature request tool SHALL be reached through an MCP server. A pack that selects an MCP-backed adapter SHALL name the server and the tool, and MAY give argument templates. The feedback link SHALL stay required, as the way to contest rules and the fallback. A consumer SHALL use the link for an adapter type it doesn't know, and warn.
+
+#### Scenario: MCP-backed adapter without a target
+
+- **WHEN** a producer validates a pack that selects the Jira adapter without naming a server and tool
+- **THEN** validation fails and names the missing field
+
+#### Scenario: Adapter type from a newer SDK
+
+- **WHEN** a consumer finds a pack whose adapter type it doesn't know
+- **THEN** `sync` warns, and feedback uses the pack's link
+
 ### Requirement: Content from dependencies
 
 A pack MAY reference skills, reference docs, and adapters that live in another package. That package SHALL be one that the pack lists as a dependency or a peer dependency.
